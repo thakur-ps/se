@@ -27,13 +27,16 @@
 		protected $defaultUser = '';
 		protected $defaultPassword = '';
 		
+		public $db = null;
+		public $cache = null;
+		
 		function setDefaultCredentials( $userName, $password ){
 			$this->defaultUser = $userName;
 			$this->defaultPassword = $password;
 		}
 		
-		function setHandler( $module, $object, $method, $className ){
-			$this->urlMap[ $module ][ $object ][ $method ] = $className ;
+		function setHandler( $object, $method, $className ){
+			$this->urlMap[ $object ][ $method ] = $className ;
 		}
 		
 		function start(){
@@ -43,28 +46,23 @@
 			
 			$parts = explode( '/', $_REQUEST['_url'] );
 			
-			if( count( $parts ) < 2 ){
+			if( count( $parts ) < 1 ){
 				self::sendHttpError( self::STATUS_FORBIDDEN );
 			}
 			
-			/* check whether module exists */
-			if( !isset( $this->urlMap[ $parts[0] ] ) ){
-				self::sendHttpError( self::STATUS_NOT_FOUND, 'module not found' );
-			}
-			
 			/* check whether object exists */
-			if( !isset( $this->urlMap[ $parts[0] ][ $parts[1] ] ) ){
+			if( !isset( $this->urlMap[ $parts[0] ] ) ){
 				self::sendHttpError( self::STATUS_NOT_FOUND, 'object not found' );
 			}
 			
 			/* check whether method is supported */
-			if( !isset( $this->urlMap[ $parts[0] ][ $parts[1] ][ $_SERVER['REQUEST_METHOD'] ] ) ){
+			if( !isset( $this->urlMap[ $parts[0] ][ $_SERVER['REQUEST_METHOD'] ] ) ){
 				self::sendHttpError( self::STATUS_METHOD_NOT_ALLOWED, 'method not allowed' );
 			}
 			
-			$className = $this->urlMap[ $parts[0] ][ $parts[1] ][ $_SERVER['REQUEST_METHOD'] ];
+			$className = $this->urlMap[ $parts[0] ][ $_SERVER['REQUEST_METHOD'] ];
 			
-			$file = $this->path.$parts[0].'/'.$parts[1].'/'.$className.'.class.php';
+			$file = $this->path.$parts[0].'/'.$className.'.class.php';
 			
 			if( !file_exists( $file ) ){
 				self::sendHttpError( self::STATUS_INTERNAL_ERROR, 'handler is missing' );
