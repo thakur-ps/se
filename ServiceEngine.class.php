@@ -1,5 +1,5 @@
 <?php
-	namespace se;
+	namespace bucorel\se;
 	
 	class ServiceEngine{
 		
@@ -35,8 +35,9 @@
 			$this->defaultPassword = $password;
 		}
 		
-		function setHandler( $object, $method, $className ){
-			$this->urlMap[ $object ][ $method ] = $className ;
+		function setHandler( $url, $method, $className ){
+			$url = $this->removeBothEndSlashes( $url );
+			$this->urlMap[ $url ][ $method ] = $className ;
 		}
 		
 		function start(){
@@ -44,33 +45,23 @@
 				self::sendHttpError( self::STATUS_FORBIDDEN );
 			}
 			
-			$parts = explode( '/', $_REQUEST['_url'] );
+			$url = $this->removeBothEndSlashes( $_REQUEST['_url'] );
 			
-			if( count( $parts ) < 1 ){
-				self::sendHttpError( self::STATUS_FORBIDDEN );
-			}
-			
-			/* check whether object exists */
-			if( !isset( $this->urlMap[ $parts[0] ] ) ){
-				self::sendHttpError( self::STATUS_NOT_FOUND, 'object not found' );
+			/* check whether url exists */
+			if( !isset( $this->urlMap[ $url ] ) ){
+				self::sendHttpError( self::STATUS_NOT_FOUND, 'not found ('.$url.')' );
 			}
 			
 			/* check whether method is supported */
-			if( !isset( $this->urlMap[ $parts[0] ][ $_SERVER['REQUEST_METHOD'] ] ) ){
+			if( !isset( $this->urlMap[ $url ][ $_SERVER['REQUEST_METHOD'] ] ) ){
 				self::sendHttpError( self::STATUS_METHOD_NOT_ALLOWED, 'method not allowed' );
 			}
 			
-			$className = $this->urlMap[ $parts[0] ][ $_SERVER['REQUEST_METHOD'] ];
-			
-			$file = $this->path.$parts[0].'/'.$className.'.class.php';
-			
-			if( !file_exists( $file ) ){
-				self::sendHttpError( self::STATUS_INTERNAL_ERROR, 'handler is missing' );
-			}
+			$className = $this->urlMap[ $url ][ $_SERVER['REQUEST_METHOD'] ];
 			
 			$this->authenticationCheck();
 			
-			include $file;
+			/*include $file;*/
 			$h = new $className;
 			$h->handleRequest();
 		}
@@ -93,6 +84,19 @@
 			}
 			
 			self::sendHttpError( self::STATUS_UNAUTHORIZED, 'unauthorized' );
+		}
+		
+		function removeBothEndSlashes( $url ){
+			$l = strlen( $url );
+			if( substr( $url, 0 ,1 ) == '/' ){
+				$url = substr( $url, 1, $l-1 );
+			}
+			
+			if( substr( $url, -1 ) == '/' ){
+				$url = substr( $url,0,$l-1 );
+			}
+			
+			return $url;
 		}
 	}
 ?>

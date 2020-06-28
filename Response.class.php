@@ -1,11 +1,11 @@
 <?php
 	/*
-	MvcResponse Class
+	Response Class
 	Written by Pushpendra Singh Thakur <thakurpsr@gmail.com>
 	(C) Business Computing Research Laboratory
 	*/
 	
-	namespace se;
+	namespace bucorel\se;
 	
 	class Response{
 		
