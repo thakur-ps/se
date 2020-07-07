@@ -105,8 +105,12 @@
 			}
 		}
 		
-		function send( array $data ){
-			if( $this->dataStrated ){
+		function send( $data ){
+			if( !$this->started ){
+				$this->start( self::OK_OK, array() );
+			}
+			
+			if( $this->dataStarted ){
 				echo ',';
 			}else{
 				$this->dataStarted = true;
